@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite it as below."
+title: "Cranioplasty by reconstruction material in Germany, 2019–2024: analysis code"
+type: software
+authors:
+  - family-names: "Lawson McLean"
+    given-names: "Aaron"
+    orcid: "https://orcid.org/0000-0001-5528-6905"
+    affiliation: "Department of Neurosurgery, Jena University Hospital, Friedrich Schiller University Jena"
+  - family-names: "Kahr"
+    given-names: "Julian"
+    affiliation: "Department of Neurosurgery, Jena University Hospital, Friedrich Schiller University Jena"
+  - family-names: "Schwarz"
+    given-names: "Falko"
+    affiliation: "Department of Neurosurgery, Jena University Hospital, Friedrich Schiller University Jena"
+  - family-names: "Senft"
+    given-names: "Christian"
+    affiliation: "Department of Neurosurgery, Jena University Hospital, Friedrich Schiller University Jena"
+repository-code: "https://github.com/rnmcln/cranioplasty-germany-2019-2024"
+license: MIT
+version: "1.0.0"
+date-released: "2026-11-15"
+keywords:
+  - cranioplasty
+  - decompressive craniectomy
+  - health services research
+  - administrative data
+  - Germany

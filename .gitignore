@@ -1,0 +1,13 @@
+# InEK-derived input values and generated numeric outputs are not redistributed
+data/input/
+output/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
