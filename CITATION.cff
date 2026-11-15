@@ -19,6 +19,7 @@ authors:
 repository-code: "https://github.com/rnmcln/cranioplasty-germany-2019-2024"
 license: MIT
 version: "1.0.0"
+doi: "10.5281/zenodo.24237013"
 date-released: "2026-11-15"
 keywords:
   - cranioplasty

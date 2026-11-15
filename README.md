@@ -1,5 +1,7 @@
 # Cranioplasty by reconstruction material in Germany, 2019–2024
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24237013.svg)](https://doi.org/10.5281/zenodo.24237013)
+
 Analysis code for a nationwide study of cranioplasty in Germany based on aggregate
 hospital discharge data reported under §21 of the Hospital Remuneration Act
 (Krankenhausentgeltgesetz, KHEntgG) and published through the InEK DatenBrowser.
@@ -87,4 +89,4 @@ remain subject to the terms of the InEK DatenBrowser.
 
 ## Citation
 
-See `CITATION.cff`.
+See `CITATION.cff`. Archived release v1.0.0: https://doi.org/10.5281/zenodo.24237013
