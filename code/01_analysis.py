@@ -3,7 +3,7 @@ Cranioplasty in Germany, 2019-2024: material-group analysis of aggregate
 inpatient data (InEK DatenBrowser, section 21 KHEntgG).
 
 Input  : data/input/mortality.csv, complications.csv, demographics.csv,
-         secondary_diagnoses_autologous_2023.csv,
+         overlap.csv, secondary_diagnoses_autologous_2023.csv,
          drg_mix_autologous_2023.csv
 Output : output/analysis_results.json, output/tables/*.csv
 
@@ -18,6 +18,11 @@ of the selected codes. The simple alloplastic group is therefore obtained as
 alloplastic total minus CAD, which equals the episodes coded 5-020.70 and no CAD
 code. Counts are subtracted directly; attribute means and percentages are
 derived by case-weighted subtraction.
+
+Episodes coded with both 5-020.2 and a 5-020.7 code (overlap.csv) belong to the
+autologous group and to an alloplastic group. A sensitivity analysis removes them from
+both and recomputes rates and risk ratios over every combination of values that the
+suppressed overlap cells (1-4 episodes each) can take.
 
 Statistics (Python standard library only, so that results do not depend on
 library versions): Wilson 95% confidence intervals; risk ratios with
@@ -241,6 +246,79 @@ assert all(int(r['N']) == row(mort, 2023, 'Autologous')['N'] for r in sdx)
 res['drg_mix_autologous_2023'] = {r['drg_family']: {'n': int(r['n']), 'N': int(r['N']), 'pct': round(100 * int(r['n']) / int(r['N']), 1)}
                                   for r in load('drg_mix_autologous_2023.csv')}
 
+# ---------------------------------------------------------------- overlap and exclusive-group sensitivity analysis
+# Episodes coded with both 5-020.2 and a 5-020.7 code were counted by combining the procedure
+# field (5-020.2) with the further-procedure field (5-020.7 codes). A cell below the display
+# threshold is recorded as 's'. The DatenBrowser reports an empty selection separately
+# ("keine Faelle"), so a suppressed cell is at least 1; the smallest count displayed in the
+# extraction is 5 (complications.csv), so a suppressed cell is at most 4.
+SUPP = (1, 4)
+ovl = load('overlap.csv')
+
+
+def cell(v):
+    return set(range(SUPP[0], SUPP[1] + 1)) if v == 's' else {int(v)}
+
+
+def totals(col_all, col_cad):
+    """Feasible pooled totals (x_all, x_cad) with x_cad <= x_all in every year."""
+    feas = {(0, 0)}
+    for r in ovl:
+        yr = {(a, c) for a in cell(r[col_all]) for c in cell(r[col_cad]) if c <= a}
+        feas = {(s[0] + a, s[1] + c) for s in feas for a, c in yr}
+    return feas
+
+
+for r in ovl:
+    r['year'] = int(r['year'])
+    for k in ('auto_N', 'overlap_alloplastic_N', 'overlap_cad_N'):
+        r[k] = int(r[k])
+    assert r['auto_N'] == row(mort, r['year'], 'Autologous')['N']
+    assert r['overlap_cad_N'] <= r['overlap_alloplastic_N']
+assert sorted(r['year'] for r in ovl) == YEARS
+
+O_all = sum(r['overlap_alloplastic_N'] for r in ovl)
+O_cad = sum(r['overlap_cad_N'] for r in ovl)
+O_simple = O_all - O_cad
+tot = res['volumes_total_2019_2024']
+res['overlap'] = {
+    'by_year': {r['year']: {'autologous_and_alloplastic': r['overlap_alloplastic_N'], 'autologous_and_CAD': r['overlap_cad_N'],
+                            'autologous_and_simple': r['overlap_alloplastic_N'] - r['overlap_cad_N']} for r in ovl},
+    'total': {'autologous_and_alloplastic': O_all, 'autologous_and_CAD': O_cad, 'autologous_and_simple': O_simple},
+    'share_pct': {'Autologous': round(100 * O_all / tot['Autologous'], 1), 'Simple alloplastic': round(100 * O_simple / tot['Simple alloplastic'], 1),
+                  'CAD': round(100 * O_cad / tot['CAD'], 1)},
+    'suppressed_cell_bounds': list(SUPP),
+}
+excl_N = {'Autologous': tot['Autologous'] - O_all, 'Simple alloplastic': tot['Simple alloplastic'] - O_simple, 'CAD': tot['CAD'] - O_cad}
+
+
+def excl_events(pooled_k, xa, xc):
+    return {'Autologous': pooled_k['Autologous'] - xa, 'Simple alloplastic': pooled_k['Simple alloplastic'] - (xa - xc), 'CAD': pooled_k['CAD'] - xc}
+
+
+def sens_block(pooled_k, feas, contrasts):
+    out = {'overlap_events_range': {'autologous_and_alloplastic': [min(f[0] for f in feas), max(f[0] for f in feas)],
+                                    'autologous_and_CAD': [min(f[1] for f in feas), max(f[1] for f in feas)]},
+           'N': excl_N, 'pct_range': {}, 'contrasts': {}}
+    scen = [excl_events(pooled_k, xa, xc) for xa, xc in sorted(feas)]
+    for g in GROUPS:
+        pcts = [wilson(s[g], excl_N[g])[0] for s in scen]
+        out['pct_range'][g] = [min(pcts), max(pcts)]
+    for a, b in contrasts:
+        rrs = [risk_ratio(s[a], excl_N[a], s[b], excl_N[b]) for s in scen]
+        ps = [test(s[a], excl_N[a], s[b], excl_N[b])[0] for s in scen]
+        out['contrasts'][f'{a} vs {b}'] = {'RR_range': [round(min(r[0] for r in rrs), 2), round(max(r[0] for r in rrs), 2)],
+                                           'CI_outer': [round(min(r[1] for r in rrs), 2), round(max(r[2] for r in rrs), 2)],
+                                           'p_max': sig(max(ps)), 'p_max_fmt': fmt_p(max(ps))}
+    return out
+
+
+mk = {g: res['mortality_pooled'][g]['deaths'] for g in GROUPS}
+res['sensitivity_exclusive'] = {'mortality': sens_block(mk, totals('overlap_alloplastic_deaths', 'overlap_cad_deaths'), pairs)}
+for code, ca, cc in (('T81.4', 'overlap_alloplastic_t81_4', 'overlap_cad_t81_4'), ('T85.72', 'overlap_alloplastic_t85_72', 'overlap_cad_t85_72')):
+    kk = {g: res['infection_pooled'][code][g]['k'] for g in GROUPS}
+    res['sensitivity_exclusive'][code] = sens_block(kk, totals(ca, cc), (('CAD', 'Autologous'), ('Simple alloplastic', 'Autologous'), ('CAD', 'Simple alloplastic')))
+
 # ---------------------------------------------------------------- write
 os.makedirs(OUT + 'tables', exist_ok=True)
 with open(OUT + 'analysis_results.json', 'w') as f:
@@ -282,4 +360,7 @@ for code in ('T81.4', 'T85.72'):
         c = res['infection_pooled'][code][g]
         print(f'  {g:20s} {c["k"]:4d}/{c["N"]:6d}  {c["pct_ci"][0]:.2f}% ({c["pct_ci"][1]:.2f}-{c["pct_ci"][2]:.2f})')
 print('Volume change 2019-2024 (%):', res['volume_change_2019_2024_pct'])
+print('Overlap (autologous and alloplastic code in one episode):', res['overlap']['total'], res['overlap']['share_pct'])
+for k, v in res['sensitivity_exclusive']['mortality']['contrasts'].items():
+    print(f'  exclusive groups, mortality {k:34s} RR {v["RR_range"][0]:.2f}-{v["RR_range"][1]:.2f}  CI {v["CI_outer"][0]:.2f}-{v["CI_outer"][1]:.2f}')
 print('Wrote', OUT + 'analysis_results.json')

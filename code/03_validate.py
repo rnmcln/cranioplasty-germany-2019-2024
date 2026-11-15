@@ -5,7 +5,9 @@ Internal-consistency and external-benchmark checks.
    count (alloplastic total minus CAD) is non-negative.
 2. Rates, confidence intervals and risk ratios in output/analysis_results.json are
    recomputed here with an independent implementation and must agree.
-3. Annual autologous (5-020.2) and CAD (5-020.71/.72/.74/.75) counts are compared
+3. Overlap counts are consistent with the group counts and the exclusive-group
+   denominators equal the pooled counts minus the overlap.
+4. Annual autologous (5-020.2) and CAD (5-020.71/.72/.74/.75) counts are compared
    with the national procedure counts published by Hirsch et al. (2026), Table 1,
    https://doi.org/10.3390/brainsci16050444, for 2019-2023.
 
@@ -73,6 +75,19 @@ for code in ('T81.4', 'T85.72'):
         a_, b_ = key.split(' vs ')
         rr = (blk[a_]['k'] / blk[a_]['N']) / (blk[b_]['k'] / blk[b_]['N'])
         check(abs(round(rr, 2) - blk[key]['RR']) < 1e-9, f'{code} RR {key}')
+
+print('2b. Overlap of autologous and alloplastic codes')
+ov = res['overlap']
+for y in YEARS:
+    o = ov['by_year'][str(y)]
+    check(o['autologous_and_CAD'] + o['autologous_and_simple'] == o['autologous_and_alloplastic'], f'{y}: overlap CAD + simple = overlap total')
+    check(o['autologous_and_alloplastic'] <= res['volumes'][str(y)]['Autologous'] and o['autologous_and_CAD'] <= res['volumes'][str(y)]['CAD'], f'{y}: overlap within group counts')
+for g in G:
+    n_ex = res['sensitivity_exclusive']['mortality']['N'][g]
+    o = {'Autologous': ov['total']['autologous_and_alloplastic'], 'Simple alloplastic': ov['total']['autologous_and_simple'], 'CAD': ov['total']['autologous_and_CAD']}[g]
+    check(n_ex == res['volumes_total_2019_2024'][g] - o, f'exclusive N {g} = pooled N minus overlap')
+for key, v in res['sensitivity_exclusive']['mortality']['contrasts'].items():
+    check(v['RR_range'][0] <= v['RR_range'][1] and v['CI_outer'][0] < v['RR_range'][0], f'sensitivity RR range ordered, {key}')
 
 print('3. External benchmark (Hirsch et al. 2026, Table 1)')
 published = {'Autologous': {2019: 3039, 2020: 2497, 2021: 2088, 2022: 2082, 2023: 2129},

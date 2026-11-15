@@ -1,7 +1,7 @@
 {
   "title": "Cranioplasty by reconstruction material in Germany, 2019–2024: analysis code",
   "upload_type": "software",
-  "description": "Analysis code, input-file templates and validation script for a nationwide study of cranioplasty in Germany (2019–2024) based on aggregate §21 KHEntgG discharge data from the InEK DatenBrowser. The code computes national volumes, case mix, in-hospital mortality and coded infection for autologous (OPS 5-020.2), simple alloplastic (5-020.70) and computer-aided-design (5-020.71/.72/.74/.75) cranioplasty. The InEK data are not redistributed.",
+  "description": "Analysis code, input-file templates and validation script for a nationwide study of cranioplasty in Germany (2019–2024) based on aggregate §21 KHEntgG discharge data from the InEK DatenBrowser. The code computes national volumes, case mix, in-hospital mortality and coded infection for autologous (OPS 5-020.2), simple alloplastic (5-020.70) and computer-aided-design (5-020.71/.72/.74/.75) cranioplasty. A sensitivity analysis quantifies episodes coded with both an autologous and an alloplastic procedure. The InEK data are not redistributed.",
   "creators": [
     {"name": "Lawson McLean, Aaron", "affiliation": "Jena University Hospital, Friedrich Schiller University Jena", "orcid": "0000-0001-5528-6905"},
     {"name": "Kahr, Julian", "affiliation": "Jena University Hospital, Friedrich Schiller University Jena"},
