@@ -2,7 +2,7 @@
 Cranioplasty in Germany, 2019-2024: material-group analysis of aggregate
 inpatient data (InEK DatenBrowser, section 21 KHEntgG).
 
-Input  : data/input/mortality.csv, complications.csv, demographics.csv,
+Input  : data/input/mortality.csv, complications.csv (T81.4, T85.72, T85.81), demographics.csv,
          overlap.csv, secondary_diagnoses_autologous_2023.csv,
          drg_mix_autologous_2023.csv
 Output : output/analysis_results.json, output/tables/*.csv
@@ -318,6 +318,19 @@ res['sensitivity_exclusive'] = {'mortality': sens_block(mk, totals('overlap_allo
 for code, ca, cc in (('T81.4', 'overlap_alloplastic_t81_4', 'overlap_cad_t81_4'), ('T85.72', 'overlap_alloplastic_t85_72', 'overlap_cad_t85_72')):
     kk = {g: res['infection_pooled'][code][g]['k'] for g in GROUPS}
     res['sensitivity_exclusive'][code] = sens_block(kk, totals(ca, cc), (('CAD', 'Autologous'), ('Simple alloplastic', 'Autologous'), ('CAD', 'Simple alloplastic')))
+
+# ---------------------------------------------------------------- T85.81, descriptive only
+# T85.81 (other complications of nervous-system implants) is below the display threshold in most
+# group-years ('s', 1-4 episodes). It is reported descriptively: queried groups as displayed, and
+# the derived simple alloplastic count as the range compatible with the alloplastic total and CAD.
+res['t85_81_by_year'] = {}
+for y in YEARS:
+    a, b, c = (row(comp, y, t)['t85_81_n'] for t in ('Autologous', SRC_ALLO, 'CAD'))
+    simple = sorted({x - z for x in cell(b) for z in cell(c) if z <= x})
+    assert simple, f'T85.81 {y}: CAD cannot exceed the alloplastic total'
+    res['t85_81_by_year'][y] = {'Autologous': a, ALLO: b, 'CAD': c, 'Simple alloplastic_range': [simple[0], simple[-1]]}
+res['t85_81_max_per_group_year'] = max(max(SUPP[1] if d[g] == 's' else int(d[g]) for g in ('Autologous', 'CAD')) for d in res['t85_81_by_year'].values())
+res['t85_81_max_per_group_year'] = max([res['t85_81_max_per_group_year']] + [d['Simple alloplastic_range'][1] for d in res['t85_81_by_year'].values()])
 
 # ---------------------------------------------------------------- write
 os.makedirs(OUT + 'tables', exist_ok=True)

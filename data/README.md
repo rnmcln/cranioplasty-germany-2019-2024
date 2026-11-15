@@ -10,7 +10,8 @@ the column layouts in `data/templates/`.
 
 For each data year 2019–2024, the annual DRG data delivery under §21 KHEntgG grouped
 to the following year's aG-DRG classification was used (for example, "Datenlieferung
-DRG 2023 gruppiert nach 2024"). Values were retrieved on 2–3 July 2026; the overlap counts in `overlap.csv` were
+DRG 2023 gruppiert nach 2024"). Values were retrieved on 2–3 July 2026; all T81.4, T85.72 and T85.81 counts were
+re-queried on 15 November 2026 (T81.4 and T85.72 identical to the July values), and the overlap counts in `overlap.csv` were
 retrieved on 15 November 2026 from the same data deliveries (the annual autologous counts
 were identical). Counts below the minimum cell size of the DatenBrowser are suppressed at
 source and were not imputed. The DatenBrowser reports an empty selection ("keine Fälle")
@@ -35,7 +36,7 @@ Filters added to each procedure selection:
 
 - in-hospital death: discharge reason "07 Tod";
 - coded infection: secondary diagnosis T81.4 or T85.72 (ICD-10-GM); T85.81 was also
-  queried and was suppressed in every group and year.
+  queried and is reported descriptively, because most cells are suppressed.
 
 Episodes coded with both 5-020.2 and a 5-020.7 code (overlap) were counted by entering
 5-020.2 in the procedure field ("Prozedur") and the alloplastic codes in the
@@ -48,7 +49,7 @@ Reversing the two fields gave identical counts for 2019 and 2023.
 | File | Content | Source of values |
 |---|---|---|
 | `mortality.csv` | year, group, OPS codes, discharge episodes, in-hospital deaths, mortality (%) | summary block; discharge-reason filter 07 |
-| `complications.csv` | year, group, discharge episodes, episodes with T85.72, episodes with T81.4 | case count with the secondary-diagnosis filter |
+| `complications.csv` | year, group, discharge episodes, episodes with T85.72, T81.4 and T85.81; `s` marks a suppressed cell | case count with the secondary-diagnosis filter |
 | `demographics.csv` | year, group, episodes, sex (%), mean and SD length of stay, short/normal/long-stay (%), PCCL 0 (%), adults (%) | summary block; adults = sum of the age bands 18–29 years to 80+ years |
 | `overlap.csv` | year, autologous episodes, overlapping episodes with any alloplastic code and with a CAD code, and their deaths, T81.4 and T85.72 counts; `s` marks a suppressed cell | procedure plus further-procedure selection |
 | `secondary_diagnoses_autologous_2023.csv` | eight most frequent secondary diagnoses, autologous group, 2023 | secondary-diagnosis output |

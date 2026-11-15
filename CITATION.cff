@@ -18,7 +18,7 @@ authors:
     affiliation: "Department of Neurosurgery, Jena University Hospital, Friedrich Schiller University Jena"
 repository-code: "https://github.com/rnmcln/cranioplasty-germany-2019-2024"
 license: MIT
-version: "1.1.0"
+version: "1.1.1"
 doi: "10.5281/zenodo.24237012"
 date-released: "2026-11-15"
 keywords:

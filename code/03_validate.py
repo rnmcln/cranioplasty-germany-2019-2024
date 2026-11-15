@@ -89,6 +89,12 @@ for g in G:
 for key, v in res['sensitivity_exclusive']['mortality']['contrasts'].items():
     check(v['RR_range'][0] <= v['RR_range'][1] and v['CI_outer'][0] < v['RR_range'][0], f'sensitivity RR range ordered, {key}')
 
+print('2c. T85.81 (descriptive)')
+for y in YEARS:
+    d = res['t85_81_by_year'][str(y)]
+    lo, hi = d['Simple alloplastic_range']
+    check(0 <= lo <= hi, f'{y}: T85.81 simple alloplastic range {lo}-{hi} is feasible')
+
 print('3. External benchmark (Hirsch et al. 2026, Table 1)')
 published = {'Autologous': {2019: 3039, 2020: 2497, 2021: 2088, 2022: 2082, 2023: 2129},
              'CAD': {2019: 1112, 2020: 1050, 2021: 1022, 2022: 1134, 2023: 1284}}
